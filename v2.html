@@ -19,12 +19,12 @@
     <meta name="twitter:card" content="summary" />
     <meta name="description" content="" />
     <meta name="theme-color" content="#191919" />
-    
-    <title><?php echo $identifier_season_title; ?> - LocalReplay</title>
+
+    <title>LocalReplay</title>
 
     <link rel="icon" href="assets/icon.png" />
     <link rel="apple-touch-icon" href="assets/icon.png" />
-    <link rel="manifest" href="assets/s/manifest.json" />
+    <!-- <link rel="manifest" href="assets/s/manifest.json" /> -->
     <link rel="stylesheet" href="assets/plyr.css" />
     <link rel="stylesheet" href="assets/fonts.min.css" />
     <link rel="stylesheet" href="assets/player.css" />
@@ -94,20 +94,20 @@
       <div id="fullresultbtn">
         <a onClick="searchfull()">Full</a><a onClick="searchE1()">GOGO</a><a onClick="searchE11()">AL</a><a onClick="searchE6()">RUSH</a><a onClick="searchMAL()">MAL</a>
       </div>
-	  
-	  
+
+
       <ul id="search-results" class="quickresult">
           <!-- Results in here -->
         </ul>
-	  
-	  
+
+
     </div>
   </div>
     <div id="tips"></div>
     <div id="topmid"></div>
     <div class="playersidebar"></div>
 
-    <div id="playerleftsidebar">
+    <!-- <div id="playerleftsidebar">
       <button id="recomendedclosebtn" onclick="hiderecomendmenu();">
         <i class="glyphicon glyphicon-arrow-left"></i>
       </button>
@@ -197,7 +197,7 @@
               </div>
             </div>
         </a>
-    </div>
+      </div>
         <div id="extracontainer">
           <button id="showExternalBtn" onclick="showExternal()">
             <i class="glyphicon glyphicon-menu-down"></i> External Websites
@@ -205,7 +205,7 @@
           <div id="loadStatus"></div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <div class="playerpage">
       <div class="subpart eptitle">
@@ -319,7 +319,7 @@
           <div id="bottomleft">
             <span id="genres">Genres :
               <span id="genredata">
-                
+
               </span>
             </span>
             <br />
@@ -437,7 +437,6 @@ fetch(`https://api.consumet.org/anime/gogoanime/info/${identifier_slugtitle}`)
     const identifier_season_title = result['title'];
     const identifier_streamid = identifier_slugtitle;
 
-    console.log(identifier_season_title)
     document.getElementById("animetitle").textContent = identifier_season_title;
 
     let name = identifier_streamid;
@@ -461,21 +460,19 @@ fetch(`https://api.consumet.org/anime/gogoanime/info/${identifier_slugtitle}`)
 
 	document.getElementById("epsavailable").textContent = result['episodes'].length;
 	result['episodes'].forEach(episode => {
-		console.log(episode.number, identifier_episode)
 		if (episode.number === parseInt(identifier_episode)) {
 			let paramurl = `v2.html?name=${identifier_slugtitle}&ep=${episode_count}`;
-			generated_episodes_html += `<a class="playbutton btn btn-primary no-click" disabled href="${paramurl}">${episode_count} </a>`; 
+			generated_episodes_html += `<a class="playbutton btn btn-primary no-click" disabled href="${paramurl}">${episode_count} </a>`;
 			identifier_episode_current = episode_count;
 			document.getElementById("eptitleplace").textContent = "EP " + identifier_episode_current;
 			document.getElementById("nextbtn").setAttribute('onclick',`window.location = "v2.html?name=${identifier_slugtitle}&ep=${identifier_episode_current + 1}"`)
 		} else {
 			let paramurl = `v2.html?name=${identifier_slugtitle}&ep=${episode_count}`;
-			generated_episodes_html += `<a class="playbutton btn btn-primary" href="${paramurl}">${episode_count} </a>`; 
+			generated_episodes_html += `<a class="playbutton btn btn-primary" href="${paramurl}">${episode_count} </a>`;
 		}
 		episode_count += 1;
 	});
 	document.getElementById("epslistplace").innerHTML = generated_episodes_html;
-	console.log(generated_episodes_html);
 
 
 	let id = "";
@@ -494,21 +491,42 @@ fetch(`https://api.consumet.org/anime/gogoanime/info/${identifier_slugtitle}`)
 					//streamString = streamString.replace("&url", streamNumber.url);
 					const video = document.querySelector('video');
 					//video.src = streamNumber.url;
-					console.log(streamNumber.url)
+          const proxyURL = 'https://corsproxy.io/?';
 
-					const player = new Plyr(video, defaultOptions);
-					
-					// For more Hls.js options, see https://github.com/dailymotion/hls.js
-					const hls = new Hls();
-					hls.loadSource(streamNumber.url);
-					hls.attachMedia(video);
-					window.hls = hls;
-					
-					// Handle changing captions
-					player.on('languagechange', () => {
-						// Caption support is still flaky. See: https://github.com/sampotts/plyr/issues/994
-						setTimeout(() => hls.subtitleTrack = player.currentTrack, 50);
-					});
+          fetch(proxyURL + encodeURIComponent(streamNumber.url)).then(response => response.text()).then(
+            result => {
+              let subURL = proxyURL + streamNumber.url;
+              let repURL = subURL.substring(0, subURL.lastIndexOf('/'));
+              let m3u8_bit = String(result).replace(/(ep.*)/g, repURL + '/$1').match(/((.*(\n|\r|\r\n)){1})https:\/\/.*1080.m3u8/g)[0];
+              let target_url = m3u8_bit.match(/https:\/\/.*1080.m3u8/g)[0];
+
+              fetch(target_url).then(response => response.text()).then(
+                result => {
+                  let new_m3u8 = String(result).replace(/(ep.*)/g, repURL + '/$1');
+
+                  const blob = new Blob([new_m3u8], {
+                  type: "application/vnd.apple.mpegurl",
+                });
+
+                const player = new Plyr(video, defaultOptions);
+
+                // For more Hls.js options, see https://github.com/dailymotion/hls.js
+                const hls = new Hls();
+                // hls.loadSource(proxyURL + encodeURIComponent(streamNumber.url));
+                hls.loadSource(URL.createObjectURL(blob));
+                hls.attachMedia(video);
+                window.hls = hls;
+
+                // Handle changing captions
+                player.on('languagechange', () => {
+                  // Caption support is still flaky. See: https://github.com/sampotts/plyr/issues/994
+                  setTimeout(() => hls.subtitleTrack = player.currentTrack, 50);
+                });
+                  }
+              )
+
+            }
+          )
 				}
 			});
 		}
@@ -526,7 +544,6 @@ async function fetchAnimeById(id) {
 }
 
 fetchAnimeById(21).then(data => {
-  console.log(JSON.stringify(data));
   document.getElementById("statusdata").textContent = data['status']
 
   let genres = data.genres.map(genre => genre.name).join(', ');

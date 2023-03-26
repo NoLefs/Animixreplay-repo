@@ -55,14 +55,17 @@ function search(term) {
 	fetch(`https://api.consumet.org/anime/gogoanime/${term.replace(" ", "%20")}?page=1`)
 	.then(response => response.json())
 	.then(json_series => {
-		json_series['results'].forEach(series => {
-		const image = series['image'];
-		const id = series['id'];
-		const title = series['title'];
+		if (json_series['results']){
+			json_series['results'].forEach(series => {
+				const image = series['image'];
+				const id = series['id'];
+				const title = series['title'];
 
-		document.getElementById("search-results").innerHTML += `<a href="v2.html?name=${id}&ep=ep1" title="${title}"><li onclick="location.href='v2.html?name=${id}&ep=ep1'"><div class="searchimg"><img class="resultimg2" src="${image}"></div><a href="v2.html?name=${id}&ep=ep1" title="${title}"><div class="details"><p class="name"><a href=v2.html?name=${id}&ep=ep1 "${title}">${title}</a></p><p class="infotext">GOGO Stream</p></div></a></li></a>`;
+				document.getElementById("search-results").innerHTML += `<a href="v2.html?name=${id}&ep=ep1" title="${title}"><li onclick="location.href='v2.html?name=${id}&ep=ep1'"><div class="searchimg"><img class="resultimg2" src="${image}"></div><a href="v2.html?name=${id}&ep=ep1" title="${title}"><div class="details"><p class="name"><a href=v2.html?name=${id}&ep=ep1 "${title}">${title}</a></p><p class="infotext">GOGO Stream</p></div></a></li></a>`;
 
-		});
+				});
+		}
+
 	});
 	/*
 	fetch("search.html?search_term=" + term)
@@ -144,12 +147,13 @@ function dateSchedule(e) {
 var curTimeEnabled = !1;
 
 function shwoschedule() {
+	const scheduleURL = "https://corsproxy.io/?https%3A%2F%2Fanimixplay.name%2Fapi%2Fs%2Fschedule.json";
     (gID("schedulenotice").style.display = "none"),
     (gID("recomendedlist").innerHTML =
         '<div style="text-align:center;padding-top:50px;color:gray">Loading...</div>'),
     curTimeEnabled || ((curTimeEnabled = !0), currentTime()),
         $.ajax({
-            url: "/assets/s/schedule.json",
+            url: scheduleURL,
             type: "GET",
             success: function(e) {
                 (scheduleloaded = !0),
@@ -356,7 +360,7 @@ function dubfetch() {
 	}
     $(".nav li").removeClass("active"),
 	$("#dubbtn").addClass("active"),
-	console.log("Dub Page Load");			
+	console.log("Dub Page Load");
 	fetch(`https://api.consumet.org/anime/gogoanime/recent-episodes?page=1&type=2`)
 		.then((response) => response.json())
 		.then((data) => {
@@ -374,7 +378,7 @@ function dubfetch() {
 					link.href = "associate.html?id=" + series.id + "&override" + "&ep=" + series.episodeNumber + "&fallback=" + series.id;
 				}*/
 				link.href = `v2.html?name=${series.id}&ep=${series.episodeNumber}`;
-				link.title = series.title;			
+				link.title = series.title;
 				animeLi.appendChild(link);
 				const imageDiv = document.createElement("div");
 				imageDiv.className = "searchimg";
@@ -430,13 +434,13 @@ function dubfetch() {
 						headers: {
 							'
 						}
-					}) 
+					})
 						.then((response) => response.json())
 						.then((data) => {
 							rating = data.mean;
 							studio = data.studios[0].nameundefined;
 							english = data['alternative_titles'].en;
-							
+
 							if (rating == null) {
 								ratingDiv.innerHTML = "<i class='glyphicon glyphicon-star'></i> N/A";
 							} else {
@@ -451,14 +455,14 @@ function dubfetch() {
 								if (english.endsWith("(Dub)")) {
 									const english_title = english.replace("(Dub)", "")
 									nameP.textContent = english_title;
-									
+
 									const dubSpan = document.createElement("span");
 									dubSpan.className = "dubtag";
 									dubSpan.textContent = " [Dub]";
 									nameP.appendChild(dubSpan);
 								} else {
 									nameP.textContent = english;
-									
+
 									const dubSpan = document.createElement("span");
 									dubSpan.className = "dubtag";
 									dubSpan.textContent = " [Dub]";
@@ -562,7 +566,7 @@ function subfetch() {
 
 					const malId = series.malId
 					const url = 'https://corsproxy.io/?' + encodeURIComponent(`https://api.myanimelist.net/v2/anime/${malId}?fields=mean,genres,studios,alternative_titles`);
-					
+
 					if (series.title.endsWith("(Dub)")) {
 						const romaji_title = series.title.replace("(Dub)", "")
 						nameP.textContent = romaji_title;
@@ -581,9 +585,9 @@ function subfetch() {
 					if (malId != 0) {
 						fetch(url, {
 							headers: {
-								
+
 							}
-						}) 
+						})
 							.then((response) => response.json())
 							.then((data) => {
 								rating = data.mean;
@@ -904,7 +908,7 @@ function loadMore() {
 	if ($("#dubbtn").hasClass("active")) {
 		console.log("Load more Dubs");
 		dubpage++;
-		
+
 		fetch(`https://api.consumet.org/anime/gogoanime/recent-episodes?page=${dubpage}&type=2`)
 			.then((response) => response.json())
 			.then((data) => {
@@ -983,9 +987,9 @@ function loadMore() {
 					if (malId != undefined) {
 						fetch(url, {
 							headers: {
-								
+
 							}
-						}) 
+						})
 							.then((response) => response.json())
 							.then((data) => {
 								rating = data.mean;
@@ -1006,14 +1010,14 @@ function loadMore() {
 									if (english.endsWith("(Dub)")) {
 										const english_title = english.replace("(Dub)", "")
 										nameP.textContent = english_title;
-										
+
 										const dubSpan = document.createElement("span");
 										dubSpan.className = "dubtag";
 										dubSpan.textContent = " [Dub]";
 										nameP.appendChild(dubSpan);
 									} else {
 										nameP.textContent = english;
-										
+
 										const dubSpan = document.createElement("span");
 										dubSpan.className = "dubtag";
 										dubSpan.textContent = " [Dub]";
@@ -1023,7 +1027,7 @@ function loadMore() {
 									if (series.title.endsWith("(Dub)")) {
 										const romaji_title = series.title.replace("(Dub)", "")
 										nameP.textContent = romaji_title;
-	
+
 										const dubSpan = document.createElement("span");
 										dubSpan.className = "dubtag";
 										dubSpan.textContent = " [Dub]";
@@ -1031,7 +1035,7 @@ function loadMore() {
 									}
 									else {
 										nameP.textContent = series.title;
-	
+
 										const dubSpan = document.createElement("span");
 										dubSpan.className = "dubtag";
 										dubSpan.textContent = " [Dub]";
@@ -1098,7 +1102,7 @@ function loadMore() {
 
 				const malId = series.malId
 				const url = 'https://corsproxy.io/?' + encodeURIComponent(`https://api.myanimelist.net/v2/anime/${malId}?fields=mean,genres,studios,alternative_titles`);
-				
+
 				if (series.title.endsWith("(Dub)")) {
 					const romaji_title = series.title.replace("(Dub)", "")
 					nameP.textContent = romaji_title;
@@ -1117,9 +1121,9 @@ function loadMore() {
 				if (malId != 0) {
 					fetch(url, {
 						headers: {
-							
+
 						}
-					}) 
+					})
 						.then((response) => response.json())
 						.then((data) => {
 							rating = data.mean;
