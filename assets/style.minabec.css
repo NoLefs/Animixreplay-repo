@@ -2358,7 +2358,7 @@ input{
   color:#9edbff
 }
 select{
-  background:url("https://cdn.animixreplay.to/aHR0cHMlM0ElMkYlMkZhbmltaXhyZXBsYXkudG8lMkZhc3NldHMlMkZmb250cyUyRmFycm93cy5zdmc=") no-repeat 100% 50%;
+  background:url("arrows.svg") no-repeat 100% 50%;
   -moz-appearance:none;
   -webkit-appearance:none;
   appearance:none;
@@ -3035,7 +3035,7 @@ select{
   display:inline-block;
   filter:grayscale(1);
   margin:0 0 0 6px;
-  background:url("https://cdn.animixreplay.to/aHR0cHMlM0ElMkYlMkZhbmltaXhyZXBsYXkudG8lMkZhc3NldHMlMkZzJTJGc3AxNi5wbmc=") no-repeat;
+  background: no-repeat;
   opacity:.7;
   margin-bottom:-2px
 }
@@ -6446,7 +6446,7 @@ border: 1px solid #42494f;
 color: #9edbff;
 }
 select {
-background: url("https://cdn.animixreplay.to/aHR0cHMlM0ElMkYlMkZhbmltaXhyZXBsYXkudG8lMkZhc3NldHMlMkZmb250cyUyRmFycm93cy5zdmc=") no-repeat 100% 50%;
+background: url("arrows.svg") no-repeat 100% 50%;
 -moz-appearance: none;
 -webkit-appearance: none;
 appearance: none;
@@ -7160,7 +7160,7 @@ float: right;
 display: inline-block;
 filter: grayscale(1);
 margin: 0 0 0 6px;
-background: url("https://cdn.animixreplay.to/aHR0cHMlM0ElMkYlMkZhbmltaXhyZXBsYXkudG8lMkZhc3NldHMlMkZzJTJGc3AxNi5wbmc=") no-repeat;
+background: no-repeat;
 opacity: 0.7;
 margin-bottom: -2px;
 }
