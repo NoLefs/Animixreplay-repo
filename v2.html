@@ -430,7 +430,6 @@ const identifier_slugtitle = urlParams.get('name');
 let identifier_episode = urlParams.get('ep');
 
 
-
 fetch(`https://api.consumet.org/anime/gogoanime/info/${identifier_slugtitle}`)
   .then(response => response.json())
   .then(result => {
@@ -485,45 +484,67 @@ fetch(`https://api.consumet.org/anime/gogoanime/info/${identifier_slugtitle}`)
 	fetch('https://api.consumet.org/anime/gogoanime/watch/' + id)
 		.then(response => response.json())
 		.then(result => {
-			let streamString = '[[{"file": "&url", "label": "1080 P", "type": "hls"}, {"tracks": [{"file": "https://cache.anicdn.stream/images/e10d3f220994bc3d89cd32764cdbf612/10.vtt", "kind": "thumbnails"}]}, ["&link"]]]';
 			result.sources.forEach((streamNumber) => {
 				if (streamNumber.quality === "default") {
-					//streamString = streamString.replace("&url", streamNumber.url);
 					const video = document.querySelector('video');
-					//video.src = streamNumber.url;
           const proxyURL = 'https://corsproxy.io/?';
 
           fetch(proxyURL + encodeURIComponent(streamNumber.url)).then(response => response.text()).then(
             result => {
+
               let subURL = proxyURL + streamNumber.url;
-              let repURL = subURL.substring(0, subURL.lastIndexOf('/'));
-              let m3u8_bit = String(result).replace(/(ep.*)/g, repURL + '/$1').match(/((.*(\n|\r|\r\n)){1})https:\/\/.*1080.m3u8/g)[0];
-              let target_url = m3u8_bit.match(/https:\/\/.*1080.m3u8/g)[0];
+              let repURL, m3u8_bit, target_url, new_m3u8;
+              try {
 
-              fetch(target_url).then(response => response.text()).then(
-                result => {
-                  let new_m3u8 = String(result).replace(/(ep.*)/g, repURL + '/$1');
+                repURL = subURL.substring(0, subURL.lastIndexOf('/'));
+                var regex = /https?:\/\/[^\s"]+(1080\.m3u8)/g;
+                // /((.*(\n|\r|\r\n)){1})https:\/\/.*1080.m3u8/g
+                m3u8_bit = String(result).replace(/(ep.*)/g, repURL + '/$1').match(regex)[0];
+                target_url = m3u8_bit.match(/https:\/\/.*1080.m3u8/g)[0];
+                shownotif("Loaded 1080p");
 
-                  const blob = new Blob([new_m3u8], {
-                  type: "application/vnd.apple.mpegurl",
+                fetch(target_url).then(response => response.text()).then(
+                  result => {
+                    new_m3u8 = String(result).replace(/(ep.*)/g, repURL + '/$1');
+
+                    const blob = new Blob([new_m3u8], {
+                    type: "application/vnd.apple.mpegurl",
+                  });
+
+                  const player = new Plyr(video, defaultOptions);
+
+                  // For more Hls.js options, see https://github.com/dailymotion/hls.js
+                  const hls = new Hls();
+                  // hls.loadSource(proxyURL + encodeURIComponent(streamNumber.url));
+                  hls.loadSource(URL.createObjectURL(blob));
+                  hls.attachMedia(video);
+                  window.hls = hls;
+
+                  // Handle changing captions
+                  player.on('languagechange', () => {
+                    // Caption support is still flaky. See: https://github.com/sampotts/plyr/issues/994
+                    setTimeout(() => hls.subtitleTrack = player.currentTrack, 50);
+                  });
+                    }
+                )
+
+              } catch (error){
+
+                shownotif("Loaded default quality");
+                new_m3u8 = String(result).replace(/^[^\s#]+/gm, function(a){return repURL + "/" + a;});
+                const blob = new Blob([new_m3u8], {
+                type: "application/vnd.apple.mpegurl",
                 });
-
                 const player = new Plyr(video, defaultOptions);
-
-                // For more Hls.js options, see https://github.com/dailymotion/hls.js
                 const hls = new Hls();
-                // hls.loadSource(proxyURL + encodeURIComponent(streamNumber.url));
                 hls.loadSource(URL.createObjectURL(blob));
                 hls.attachMedia(video);
                 window.hls = hls;
-
-                // Handle changing captions
                 player.on('languagechange', () => {
-                  // Caption support is still flaky. See: https://github.com/sampotts/plyr/issues/994
                   setTimeout(() => hls.subtitleTrack = player.currentTrack, 50);
                 });
-                  }
-              )
+
+              }
 
             }
           )
