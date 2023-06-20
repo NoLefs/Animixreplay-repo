@@ -249,13 +249,9 @@
             <div id="streamtype">
               GOGO Stream
             </div>
-            <div id="showrecomendbtn" onClick="showrecomendmenu();" style="display: inline-block;">
+            <div id="showrecomendbtn" onClick="toggleProxy();" style="display: inline-block;">
               <i class="glyphicon glyphicon-cog"></i>
               <span id="changetext">Change</span>
-            </div>
-            <div id="showrecomendbtn" onClick="showrecomendmenu();" style="display: inline-block;">
-              <i class="glyphicon glyphicon-cog"></i>
-              <span id="changetext">Change Proxy</span>
             </div>
             <div id="sharebtn" style="display: none;">
               <i class="glyphicon glyphicon-share-alt"></i>
@@ -428,6 +424,81 @@ defaultOptions.fullscreen = {
 const urlParams = new URLSearchParams(window.location.search);
 const identifier_slugtitle = urlParams.get('name');
 let identifier_episode = urlParams.get('ep');
+var proxyURL;
+let ProxBtn = document.querySelector("#changetext");
+
+function setCookie(name,value,days) {
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days*24*60*60*1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
+function getCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+        var c = ca[i];
+        while (c.charAt(0)==' ') c = c.substring(1,c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+}
+function eraseCookie(name) {
+    document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+}
+
+function swapProxy(){
+  switch(getCookie("Proxy")) {
+    case "0":
+      setCookie("Proxy", "0", 30);
+      proxyURL = "";
+      ProxBtn.innerHTML = "Proxy: Off"
+      break;
+
+    case "1":
+      setCookie("Proxy", "1", 30);
+      proxyURL = atob('aHR0cHM6Ly9wcm94eS52bnhzZXJ2ZXJzLmNvbS8=');
+      ProxBtn.innerHTML = "Proxy: VNX"
+      break;
+
+    case "2":
+      setCookie("Proxy", "2", 30);
+      proxyURL = atob('aHR0cHM6Ly9jb3JzcHJveHkuaW8vPw==');
+      ProxBtn.innerHTML = "Proxy: CORS"
+      break;
+
+    default:
+      setCookie("Proxy", "0", 30);
+      proxyURL = "";
+      ProxBtn.innerHTML = "Proxy: Off"
+  }
+}
+swapProxy();
+
+function toggleProxy(){
+  switch(getCookie("Proxy")) {
+
+    case "0":
+      setCookie("Proxy", "1", 30);
+      break;
+
+    case "1":
+      setCookie("Proxy", "2", 30);
+      break;
+
+    case "2":
+      setCookie("Proxy", "0", 30);
+      break;
+
+    default:
+      setCookie("Proxy", "0", 30);
+  }
+
+  window.location.reload();
+}
 
 
 fetch(`https://api.consumet.org/anime/gogoanime/info/${identifier_slugtitle}`)
@@ -487,9 +558,8 @@ fetch(`https://api.consumet.org/anime/gogoanime/info/${identifier_slugtitle}`)
 			result.sources.forEach((streamNumber) => {
 				if (streamNumber.quality === "default") {
 					const video = document.querySelector('video');
-          const proxyURL = 'https://corsproxy.io/?';
 
-          fetch(proxyURL + encodeURIComponent(streamNumber.url)).then(response => response.text()).then(
+          fetch(proxyURL + streamNumber.url).then(response => response.text()).then(
             result => {
 
               let subURL = proxyURL + streamNumber.url;
